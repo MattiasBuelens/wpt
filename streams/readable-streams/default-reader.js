@@ -204,7 +204,7 @@ promise_test(t => {
 
 }, 'closed should be rejected after reader releases its lock (multiple stream locks)');
 
-promise_test(() => {
+promise_test(async () => {
 
   const rs = new ReadableStream({
     start(c) {
@@ -218,12 +218,14 @@ promise_test(() => {
   const promise1 = reader1.read().then(r => {
     assert_object_equals(r, { value: 'a', done: false }, 'reading the first chunk from reader1 works');
   });
+  await Promise.resolve();
   reader1.releaseLock();
 
   const reader2 = rs.getReader();
   const promise2 = reader2.read().then(r => {
     assert_object_equals(r, { value: 'b', done: false }, 'reading the second chunk from reader2 works');
   });
+  await Promise.resolve();
   reader2.releaseLock();
 
   return Promise.all([promise1, promise2]);
@@ -279,7 +281,7 @@ promise_test(t => {
 
 }, 'cancel() on a released reader is a no-op and does not pass through');
 
-promise_test(t => {
+promise_test(async t => {
 
   const promiseAsserts = [];
 
@@ -302,6 +304,7 @@ promise_test(t => {
 
   controller.error(theError);
 
+  await Promise.resolve();
   reader1.releaseLock();
 
   const reader2 = rs.getReader();

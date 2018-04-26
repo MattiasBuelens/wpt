@@ -177,7 +177,7 @@ promise_test(() => {
   });
 }, 'pipeTo() inside size() should behave as expected');
 
-promise_test(() => {
+promise_test(async () => {
   let controller;
   let readPromise;
   let calls = 0;
@@ -197,6 +197,9 @@ promise_test(() => {
     },
     highWaterMark: 0
   });
+
+  await flushAsyncEvents();
+
   reader = rs.getReader();
   controller.enqueue('a');
   readPromise.then(() => {

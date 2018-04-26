@@ -186,6 +186,8 @@ promise_test(() => {
   return writer.ready.then(() => {
     writer.write('a');
 
+    return Promise.resolve();
+  }).then(() => {
     writer.close();
 
     return writer.ready.then(v => {

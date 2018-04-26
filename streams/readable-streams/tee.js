@@ -102,9 +102,9 @@ promise_test(t => {
     }),
     reader1.read().then(r => {
       assert_object_equals(r, { value: 'b', done: false }, 'should be able to read the second chunk in branch1');
-
-      return promise_rejects(t, theError, reader2.read());
     })
+    .then(() => Promise.resolve())
+    .then(() => promise_rejects(t, theError, reader2.read()))
     .then(() => promise_rejects(t, theError, reader1.read()))
   ]);
 

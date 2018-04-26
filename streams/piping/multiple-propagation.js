@@ -37,7 +37,7 @@ promise_test(t => {
 
 }, 'Piping from an errored readable stream to an errored writable stream');
 
-promise_test(t => {
+promise_test(async t => {
   const rs = recordingReadableStream({
     start(c) {
       c.error(error1);
@@ -48,6 +48,7 @@ promise_test(t => {
       c.error(error2);
     }
   });
+  await flushAsyncEvents();
 
   return promise_rejects(t, error1, rs.pipeTo(ws, { preventAbort: true }),
     'pipeTo must reject with the readable stream\'s error')
@@ -63,12 +64,14 @@ promise_test(t => {
 
 }, 'Piping from an errored readable stream to an errored writable stream; preventAbort = true');
 
-promise_test(t => {
+promise_test(async t => {
   const rs = recordingReadableStream({
     start(c) {
       c.error(error1);
     }
   });
+  await flushAsyncEvents();
+
   const ws = recordingWritableStream();
   const writer = ws.getWriter();
   const closePromise = writer.close();
@@ -115,7 +118,7 @@ promise_test(t => {
 
 }, 'Piping from an errored readable stream to a closed writable stream');
 
-promise_test(t => {
+promise_test(async t => {
   const rs = recordingReadableStream({
     start(c) {
       c.close();
@@ -126,6 +129,7 @@ promise_test(t => {
       c.error(error1);
     }
   });
+  await flushAsyncEvents();
 
   return promise_rejects(t, error1, rs.pipeTo(ws), 'pipeTo must reject with the writable stream\'s error').then(() => {
     assert_array_equals(rs.events, []);
@@ -139,7 +143,7 @@ promise_test(t => {
 
 }, 'Piping from a closed readable stream to an errored writable stream');
 
-promise_test(() => {
+promise_test(async () => {
   const rs = recordingReadableStream({
     start(c) {
       c.close();
@@ -149,6 +153,7 @@ promise_test(() => {
   const writer = ws.getWriter();
   writer.close();
   writer.releaseLock();
+  await flushAsyncEvents();
 
   return rs.pipeTo(ws).then(() => {
     assert_array_equals(rs.events, []);
