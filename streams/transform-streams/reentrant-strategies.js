@@ -139,6 +139,7 @@ promise_test(() => {
   // Allow promise returned by start() to resolve so that enqueue() will happen synchronously.
   return delay(0).then(() => {
     controller.enqueue('a');
+  }).then(() => {
     assert_not_equals(pipeToPromise, undefined);
 
     // Some pipeTo() implementations need an additional chunk enqueued in order for the first one to be processed. See
@@ -185,6 +186,7 @@ promise_test(() => {
   return flushAsyncEvents().then(() => {
     assert_false(writeResolved);
     controller.enqueue('a');
+  }).then(() => {
     assert_equals(calls, 1, 'size() should have been called once');
     return delay(0);
   }).then(() => {
@@ -203,6 +205,7 @@ promise_test(() => {
 promise_test(() => {
   let writer;
   let writePromise1;
+  let writePromise2;
   let calls = 0;
   const ts = new TransformStream({}, undefined, {
     size() {
@@ -218,7 +221,8 @@ promise_test(() => {
   // Give pull() a chance to be called.
   return delay(0).then(() => {
     // This write results in a synchronous call to transform(), enqueue(), and size().
-    const writePromise2 = writer.write('b');
+    writePromise2 = writer.write('b');
+  }).then(() => {
     assert_equals(calls, 1, 'size() should have been called once');
     return Promise.all([writePromise1, writePromise2, writer.close()]);
   }).then(() => {
@@ -287,6 +291,7 @@ promise_test(() => {
   // call to TransformStreamDefaultSink.
   return delay(0).then(() => {
     controller.enqueue('a');
+  }).then(() => {
     return reader.read();
   }).then(({ value, done }) => {
     assert_false(done, 'done should be false');
@@ -317,6 +322,7 @@ promise_test(t => {
   // call to TransformStreamDefaultSink.
   return delay(0).then(() => {
     controller.enqueue('a');
+  }).then(() => {
     return Promise.all([promise_rejects(t, error1, reader.read(), 'read() should reject'), abortPromise]);
   });
 }, 'writer.abort() inside size() should work');
