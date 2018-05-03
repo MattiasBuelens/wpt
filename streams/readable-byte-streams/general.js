@@ -718,13 +718,13 @@ promise_test(() => {
       desiredSizes.push(controller.desiredSize);
       controller.enqueue(new Uint8Array(1));
       return Promise.resolve().then(() => {
-      desiredSizes.push(controller.desiredSize);
-      controller.enqueue(new Uint8Array(1));
-      return Promise.resolve();
+        desiredSizes.push(controller.desiredSize);
+        controller.enqueue(new Uint8Array(1));
+        return Promise.resolve();
       }).then(() => {
-      desiredSizes.push(controller.desiredSize);
+        desiredSizes.push(controller.desiredSize);
 
-      ++pullCount;
+        ++pullCount;
       });
     },
     type: 'bytes'
@@ -772,13 +772,13 @@ promise_test(() => {
       desiredSizes.push(c.desiredSize);
 
       return Promise.resolve().then(() => {
-      if (pullCount < 3) {
-        c.enqueue(new Uint8Array(1));
-      } else {
-        c.close();
-      }
+        if (pullCount < 3) {
+          c.enqueue(new Uint8Array(1));
+        } else {
+          c.close();
+        }
 
-      ++pullCount;
+        ++pullCount;
       });
     },
     type: 'bytes'
@@ -1130,9 +1130,9 @@ promise_test(() => {
       viewInfos.push(extractViewInfo(controller.byobRequest.view));
       controller.enqueue(new Uint8Array(1));
       return delay(0).then(() => {
-      viewInfos.push(extractViewInfo(controller.byobRequest.view));
-      pullResolve();
-      return delay(0);
+        viewInfos.push(extractViewInfo(controller.byobRequest.view));
+        pullResolve();
+        return delay(0);
       });
     },
     type: 'bytes'
