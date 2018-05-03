@@ -41,7 +41,7 @@ promise_test(() => {
 
   const writer = ws.getWriter();
   return Promise.resolve().then(() => {
-  assert_equals(writer.desiredSize, null, 'desiredSize should be null');
+    assert_equals(writer.desiredSize, null, 'desiredSize should be null');
   });
 }, 'desiredSize on a writer for an errored stream');
 
