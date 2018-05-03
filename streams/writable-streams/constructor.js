@@ -19,10 +19,11 @@ promise_test(() => {
   controller.error(error1);
 
   const writer = ws.getWriter();
-
+  return Promise.resolve().then(() => {
   assert_equals(writer.desiredSize, null, 'desiredSize should be null');
   return writer.closed.catch(r => {
     assert_equals(r, error1, 'ws should be errored by the passed error');
+  });
   });
 }, 'controller argument should be passed to start method');
 
