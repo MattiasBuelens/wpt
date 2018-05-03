@@ -717,11 +717,15 @@ promise_test(() => {
       byobRequest = controller.byobRequest;
       desiredSizes.push(controller.desiredSize);
       controller.enqueue(new Uint8Array(1));
+      return Promise.resolve().then(() => {
       desiredSizes.push(controller.desiredSize);
       controller.enqueue(new Uint8Array(1));
+      return Promise.resolve();
+      }).then(() => {
       desiredSizes.push(controller.desiredSize);
 
       ++pullCount;
+      });
     },
     type: 'bytes'
   }, {
@@ -767,6 +771,7 @@ promise_test(() => {
       byobRequest = c.byobRequest;
       desiredSizes.push(c.desiredSize);
 
+      return Promise.resolve().then(() => {
       if (pullCount < 3) {
         c.enqueue(new Uint8Array(1));
       } else {
@@ -774,6 +779,7 @@ promise_test(() => {
       }
 
       ++pullCount;
+      });
     },
     type: 'bytes'
   }, {
@@ -1105,18 +1111,29 @@ promise_test(() => {
   let byobRequest;
   const viewInfos = [];
 
+  let reader;
+  let readPromise;
+
+  let pullResolve;
+  const pullPromise = new Promise(resolve => {
+    pullResolve = resolve;
+  });
+
   const stream = new ReadableStream({
     start(c) {
       controller = c;
     },
     pull() {
+      ++pullCount;
       byobRequest = controller.byobRequest;
 
       viewInfos.push(extractViewInfo(controller.byobRequest.view));
       controller.enqueue(new Uint8Array(1));
+      return delay(0).then(() => {
       viewInfos.push(extractViewInfo(controller.byobRequest.view));
-
-      ++pullCount;
+      pullResolve();
+      return delay(0);
+      });
     },
     type: 'bytes'
   });
@@ -1124,9 +1141,9 @@ promise_test(() => {
   return Promise.resolve().then(() => {
     assert_equals(pullCount, 0, 'No pull() as no read(view) yet');
 
-    const reader = stream.getReader({ mode: 'byob' });
+    reader = stream.getReader({ mode: 'byob' });
 
-    const promise = reader.read(new Uint16Array(1)).then(result => {
+    readPromise = reader.read(new Uint16Array(1)).then(result => {
       assert_equals(result.done, true, 'result.done');
       assert_equals(result.value.constructor, Uint16Array, 'result.value');
     });
@@ -1134,6 +1151,9 @@ promise_test(() => {
     assert_equals(pullCount, 1, '1 pull() should have been made in response to partial fill by enqueue()');
     assert_not_equals(byobRequest, undefined, 'byobRequest should not be undefined');
     assert_equals(viewInfos[0].byteLength, 2, 'byteLength before enqueue() shouild be 2');
+
+    return pullPromise;
+  }).then(() => {
     assert_equals(viewInfos[1].byteLength, 1, 'byteLength after enqueue() should be 1');
 
 
@@ -1142,8 +1162,10 @@ promise_test(() => {
     // Tell that the buffer given via pull() is returned.
     controller.byobRequest.respond(0);
 
+    return delay(0);
+  }).then(() => {
     assert_equals(pullCount, 1, 'pull() should only be called once');
-    return promise;
+    return readPromise;
   });
 }, 'ReadableStream with byte source: cancel() with partially filled pending pull() request');
 
@@ -2065,12 +2087,14 @@ promise_test(() => {
 
   const readPromise = rs.getReader().read();
 
+  return Promise.resolve().then(() => {
   const br = controller.byobRequest;
   controller.close();
 
   br.respond(0);
 
   return readPromise;
+  });
 }, 'ReadableStream with byte source: default reader + autoAllocateChunkSize + byobRequest interaction');
 
 test(() => {
