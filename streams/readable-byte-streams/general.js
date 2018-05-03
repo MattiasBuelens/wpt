@@ -717,10 +717,10 @@ promise_test(() => {
       byobRequest = controller.byobRequest;
       desiredSizes.push(controller.desiredSize);
       controller.enqueue(new Uint8Array(1));
-      return Promise.resolve().then(() => {
+      return delay(0).then(() => {
         desiredSizes.push(controller.desiredSize);
         controller.enqueue(new Uint8Array(1));
-        return Promise.resolve();
+        return delay(0);
       }).then(() => {
         desiredSizes.push(controller.desiredSize);
 
@@ -744,6 +744,8 @@ promise_test(() => {
   assert_equals(pullCount, 0, 'pullCount after the enqueue() outside pull');
 
   return Promise.all([p0, p1, p2]).then(result => {
+    return delay(0).then(() => result);
+  }).then(result => {
     assert_equals(pullCount, 1, 'pullCount after completion of all read()s');
 
     assert_equals(result[0].done, false, 'result[0].done');
