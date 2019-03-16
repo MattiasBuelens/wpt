@@ -1814,6 +1814,80 @@ promise_test(t => {
 promise_test(t => {
   const stream = new ReadableStream({
     start(c) {
+      c.close();
+    },
+    pull: t.unreached_func('pull() should not be called'),
+    type: 'bytes'
+  });
+
+  const reader = stream.getReader();
+
+  return reader.read().then(result => {
+    assert_object_equals(result, { value: undefined, done: true }, 'read() should fulfill with close');
+  });
+}, 'ReadableStream with byte source: read() on a closed stream');
+
+promise_test(t => {
+  let controller;
+
+  const stream = new ReadableStream({
+    start(c) {
+      controller = c;
+    },
+    type: 'bytes'
+  });
+
+  const reader = stream.getReader();
+
+  const promise = reader.read();
+
+  controller.close();
+
+  return promise.then(result => {
+    assert_object_equals(result, { value: undefined, done: true }, 'read() should fulfill with close');
+  });
+}, 'ReadableStream with byte source: read(), then close()');
+
+promise_test(t => {
+  const stream = new ReadableStream({
+    start(c) {
+      c.close();
+    },
+    pull: t.unreached_func('pull() should not be called'),
+    type: 'bytes'
+  });
+
+  const reader = stream.getReader({ mode: 'byob' });
+
+  return reader.read(new Uint8Array(1)).then(result => {
+    assert_object_equals(result, { value: undefined, done: true }, 'read(view) should fulfill with close');
+  });
+}, 'ReadableStream with byte source: read(view) on an closed stream');
+
+promise_test(t => {
+  let controller;
+
+  const stream = new ReadableStream({
+    start(c) {
+      controller = c;
+    },
+    type: 'bytes'
+  });
+
+  const reader = stream.getReader({ mode: 'byob' });
+
+  const promise = reader.read(new Uint8Array(1));
+
+  controller.close();
+
+  return promise.then(result => {
+    assert_object_equals(result, { value: undefined, done: true }, 'read(view) should fulfill with close');
+  });
+}, 'ReadableStream with byte source: read(view), then close()');
+
+promise_test(t => {
+  const stream = new ReadableStream({
+    start(c) {
       c.error(error1);
     },
     pull: t.unreached_func('pull() should not be called'),
