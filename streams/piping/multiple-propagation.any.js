@@ -225,3 +225,39 @@ promise_test(() => {
   });
 
 }, 'Piping from a closed readable stream to a closed writable stream');
+
+promise_test(async t => {
+  const rs = recordingReadableStream();
+  const ws = recordingWritableStream();
+
+  const pipeToPromise = rs.pipeTo(ws);
+  await flushAsyncEvents();
+
+  rs.controller.error(error1);
+  ws.controller.error(error2);
+
+  await promise_rejects_exactly(t, error1, pipeToPromise, 'pipeTo must reject with readable\'s error');
+  assert_array_equals(rs.eventsWithoutPulls, []);
+  assert_array_equals(ws.events, ['abort', error1]);
+
+  await promise_rejects_exactly(t, error1, rs.getReader().closed);
+  await promise_rejects_exactly(t, error1, ws.getWriter().closed);
+}, 'Piping: error the readable stream right before erroring the writable stream');
+
+promise_test(async t => {
+  const rs = recordingReadableStream();
+  const ws = recordingWritableStream();
+
+  const pipeToPromise = rs.pipeTo(ws);
+  await flushAsyncEvents();
+
+  ws.controller.error(error1);
+  rs.controller.error(error2);
+
+  await promise_rejects_exactly(t, error1, pipeToPromise, 'pipeTo must reject with writable\'s error');
+  assert_array_equals(rs.eventsWithoutPulls, ['cancel', error1]);
+  assert_array_equals(ws.events, []);
+
+  await promise_rejects_exactly(t, error1, ws.getWriter().closed);
+  await rs.getReader().closed;
+}, 'Piping: error the writable stream right before erroring the readable stream');
