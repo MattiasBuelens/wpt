@@ -272,6 +272,7 @@ promise_test(t => {
   const abortController = new AbortController();
   const signal = abortController.signal;
   abortController.abort();
+  await flushAsyncEvents();
   return promise_rejects_exactly(t, error2, rs.pipeTo(ws, { signal }), 'pipeTo should reject')
       .then(() => assert_array_equals(events, ['abort', 'cancel'], 'abort() should be called before cancel()'));
 }, 'a rejection from underlyingSink.abort() should be preferred to one from underlyingSource.cancel()');
