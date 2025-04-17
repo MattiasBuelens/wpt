@@ -8,7 +8,7 @@
 
 idl_test(
   ['element-timing'],
-  ['performance-timeline', 'dom'],
+  ['performance-timeline', 'paint-timing', 'dom'],
   idl_array => {
     idl_array.add_objects({
       // PerformanceElementTiming: [ TODO ]
