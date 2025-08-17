@@ -329,6 +329,8 @@ function extractViewInfo(view) {
   return {
     constructor: view.constructor,
     bufferByteLength: view.buffer.byteLength,
+    bufferMaxByteLength: view.buffer.maxByteLength,
+    bufferResizable: view.buffer.resizable,
     byteOffset: view.byteOffset,
     byteLength: view.byteLength
   };
@@ -382,6 +384,8 @@ promise_test(() => {
     const viewInfo = byobRequest.viewInfo;
     assert_equals(viewInfo.constructor, Uint8Array, 'first view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 16, 'first view.buffer.byteLength should be 16');
+    assert_equals(viewInfo.bufferMaxByteLength, 16, 'first view.buffer.maxByteLength should be 16');
+    assert_false(viewInfo.bufferResizable, 'first view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'first view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 16, 'first view.byteLength should be 16');
 
@@ -401,6 +405,8 @@ promise_test(() => {
     const viewInfo = byobRequest.viewInfo;
     assert_equals(viewInfo.constructor, Uint8Array, 'second view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 16, 'second view.buffer.byteLength should be 16');
+    assert_equals(viewInfo.bufferMaxByteLength, 16, 'second view.buffer.maxByteLength should be 16');
+    assert_false(viewInfo.bufferResizable, 'second view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'second view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 16, 'second view.byteLength should be 16');
 
@@ -467,6 +473,8 @@ promise_test(() => {
     const viewInfo = byobRequest.viewInfo;
     assert_equals(viewInfo.constructor, Uint8Array, 'first view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 16, 'first view.buffer.byteLength should be 16');
+    assert_equals(viewInfo.bufferMaxByteLength, 16, 'first view.buffer.maxByteLength should be 16');
+    assert_false(viewInfo.bufferResizable, 'first view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'first view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 16, 'first view.byteLength should be 16');
 
@@ -488,6 +496,8 @@ promise_test(() => {
     const viewInfo = byobRequest.viewInfo;
     assert_equals(viewInfo.constructor, Uint8Array, 'second view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 32, 'second view.buffer.byteLength should be 32');
+    assert_equals(viewInfo.bufferMaxByteLength, 32, 'second view.buffer.maxByteLength should be 32');
+    assert_false(viewInfo.bufferResizable, 'second view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'second view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 32, 'second view.byteLength should be 32');
     assert_equals(pullCount, 2, 'pullCount should be 2');
@@ -1001,6 +1011,8 @@ promise_test(() => {
     assert_not_equals(byobRequest, null, 'byobRequest must not be null');
     assert_equals(viewInfo.constructor, Uint8Array, 'view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 4, 'view.buffer.byteLength should be 4');
+    assert_equals(viewInfo.bufferMaxByteLength, 4, 'view.buffer.maxByteLength should be 4');
+    assert_false(viewInfo.bufferResizable, 'view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 4, 'view.byteLength should be 4');
 
@@ -1064,6 +1076,8 @@ promise_test(() => {
     assert_not_equals(byobRequest, null, 'byobRequest must not be null');
     assert_equals(viewInfo.constructor, Uint8Array, 'view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 4, 'view.buffer.byteLength should be 4');
+    assert_equals(viewInfo.bufferMaxByteLength, 4, 'view.buffer.maxByteLength should be 4');
+    assert_false(viewInfo.bufferResizable, 'view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 4, 'view.byteLength should be 4');
 
@@ -1431,6 +1445,8 @@ promise_test(() => {
 
     assert_equals(viewInfo.constructor, Uint8Array, 'view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 2, 'view.buffer.byteLength should be 2');
+    assert_equals(viewInfo.bufferMaxByteLength, 2, 'view.buffer.maxByteLength should be 2');
+    assert_false(viewInfo.bufferResizable, 'view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 1, 'view.byteOffset should be 1');
     assert_equals(viewInfo.byteLength, 1, 'view.byteLength should be 1');
   });
@@ -1505,6 +1521,8 @@ promise_test(() => {
       assert_not_equals(byobRequest, null, 'byobRequest must not be null');
       assert_equals(viewInfo.constructor, Uint8Array, 'view.constructor should be Uint8Array');
       assert_equals(viewInfo.bufferByteLength, 2, 'view.buffer.byteLength should be 2');
+      assert_equals(viewInfo.bufferMaxByteLength, 2, 'view.buffer.maxByteLength should be 2');
+      assert_false(viewInfo.bufferResizable, 'view.buffer.resizable should be false');
       assert_equals(viewInfo.byteOffset, 1, 'view.byteOffset should be 1');
       assert_equals(viewInfo.byteLength, 1, 'view.byteLength should be 1');
       assert_equals(desiredSize, 0, 'desiredSize should be zero');
@@ -1642,6 +1660,8 @@ promise_test(() => {
     assert_not_equals(byobRequest, null, 'byobRequest must not be null');
     assert_equals(viewInfo.constructor, Uint8Array, 'view.constructor should be Uint8Array');
     assert_equals(viewInfo.bufferByteLength, 16, 'view.buffer.byteLength should be 16');
+    assert_equals(viewInfo.bufferMaxByteLength, 16, 'view.buffer.maxByteLength should be 16');
+    assert_false(viewInfo.bufferResizable, 'view.buffer.resizable should be false');
     assert_equals(viewInfo.byteOffset, 0, 'view.byteOffset should be 0');
     assert_equals(viewInfo.byteLength, 16, 'view.byteLength should be 16');
   });
@@ -1692,7 +1712,8 @@ promise_test(() => {
     for (let i = 0; i < 4; ++i) {
       assert_equals(viewInfos[i].constructor, Uint8Array, 'view.constructor should be Uint8Array');
       assert_equals(viewInfos[i].bufferByteLength, 4, 'view.buffer.byteLength should be 4');
-
+      assert_equals(viewInfos[i].bufferMaxByteLength, 4, 'view.buffer.maxByteLength should be 4');
+      assert_false(viewInfos[i].bufferResizable, 'view.buffer.resizable should be false');
       assert_equals(viewInfos[i].byteOffset, i, 'view.byteOffset should be i');
       assert_equals(viewInfos[i].byteLength, 4 - i, 'view.byteLength should be 4 - i');
 
@@ -1745,7 +1766,8 @@ promise_test(() => {
     for (let i = 0; i < 4; ++i) {
       assert_equals(viewInfos[i].constructor, Uint8Array, 'view.constructor should be Uint8Array');
       assert_equals(viewInfos[i].bufferByteLength, 4, 'view.buffer.byteLength should be 4');
-
+      assert_equals(viewInfos[i].bufferMaxByteLength, 4, 'view.buffer.maxByteLength should be 4');
+      assert_false(viewInfos[i].bufferResizable, 'view.buffer.resizable should be false');
       assert_equals(viewInfos[i].byteOffset, i, 'view.byteOffset should be i');
       assert_equals(viewInfos[i].byteLength, 4 - i, 'view.byteLength should be 4 - i');
 
