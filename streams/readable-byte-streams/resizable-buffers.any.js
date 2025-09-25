@@ -94,3 +94,33 @@ promise_test(async t => {
   }
 
 }, 'ReadableStream with byte source: read() with a resizable buffer');
+
+test(t => {
+  let controller;
+  const stream = new ReadableStream({
+    start: t.step_func((c) => {
+      controller = c;
+    }),
+    pull: t.unreached_func('pull() should not be called'),
+    type: 'bytes'
+  });
+
+  const buffer = new ArrayBuffer(10, { maxByteLength: 20 });
+  const view = new Uint8Array(buffer, 0, 10);
+  assert_throws_js(TypeError, () => controller.enqueue(view), 'enqueue() must throw');
+}, 'ReadableStream with byte source: enqueue() with a resizable buffer must throw');
+
+test(t => {
+  let controller;
+  const stream = new ReadableStream({
+    start: t.step_func((c) => {
+      controller = c;
+    }),
+    pull: t.unreached_func('pull() should not be called'),
+    type: 'bytes'
+  });
+
+  const buffer = new SharedArrayBuffer(10);
+  const view = new Uint8Array(buffer, 0, 10);
+  assert_throws_js(TypeError, () => controller.enqueue(view), 'enqueue() must throw');
+}, 'ReadableStream with byte source: enqueue() with a shared buffer must throw');
