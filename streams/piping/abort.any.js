@@ -272,9 +272,34 @@ promise_test(t => {
   const abortController = new AbortController();
   const signal = abortController.signal;
   abortController.abort();
-  return promise_rejects_exactly(t, error2, rs.pipeTo(ws, { signal }), 'pipeTo should reject')
-      .then(() => assert_array_equals(events, ['abort', 'cancel'], 'abort() should be called before cancel()'));
-}, 'a rejection from underlyingSink.abort() should be preferred to one from underlyingSource.cancel()');
+  return promise_rejects_exactly(t, error1, rs.pipeTo(ws, { signal }), 'pipeTo should reject with cancel error')
+      .then(() => assert_array_equals(events, ['cancel', 'abort'], 'cancel() should be called before abort()'));
+}, 'a rejection from underlyingSource.cancel() should be preferred to one from underlyingSink.abort() when writable is not started');
+
+promise_test(t => {
+  const events = [];
+  const rs = new ReadableStream({
+    pull(controller) {
+      controller.error('failed to abort');
+    },
+    cancel() {
+      events.push('cancel');
+      return Promise.reject(error1);
+    }
+  }, hwm0);
+  const ws = new WritableStream({
+    abort() {
+      events.push('abort');
+      return Promise.reject(error2);
+    }
+  });
+  const abortController = new AbortController();
+  const signal = abortController.signal;
+  abortController.abort();
+  return Promise.resolve()
+    .then(() => promise_rejects_exactly(t, error2, rs.pipeTo(ws, { signal }), 'pipeTo should reject with abort error'))
+    .then(() => assert_array_equals(events, ['abort', 'cancel'], 'abort() should be called before cancel()'));
+}, 'a rejection from underlyingSink.abort() should be preferred to one from underlyingSource.cancel() when writable is started');
 
 promise_test(t => {
   const rs = new ReadableStream({
