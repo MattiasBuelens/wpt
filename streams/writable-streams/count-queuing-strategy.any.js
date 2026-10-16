@@ -1,4 +1,5 @@
 // META: global=window,worker
+// META: script=../resources/test-utils.js
 'use strict';
 
 test(() => {
@@ -23,7 +24,7 @@ promise_test(() => {
   let writePromiseB;
   let writePromiseC;
 
-  return Promise.resolve().then(() => {
+  return flushAsyncEvents().then(() => {
     assert_equals(writer.desiredSize, 0, 'desiredSize should be initially 0');
 
     const writePromiseA = writer.write('a');
@@ -71,7 +72,7 @@ promise_test(() => {
   let writePromiseC;
   let writePromiseD;
 
-  return Promise.resolve().then(() => {
+  return flushAsyncEvents().then(() => {
     assert_equals(writer.desiredSize, 4, 'desiredSize should be initially 4');
 
     const writePromiseA = writer.write('a');

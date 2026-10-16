@@ -1,4 +1,5 @@
 // META: global=window,worker
+// META: script=../resources/test-utils.js
 'use strict';
 
 test(() => {
@@ -228,7 +229,7 @@ promise_test(() => {
   const events = [];
   const ws = new WritableStream();
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     // Force the ready promise back to a pending state.
     const writerPromise = writer.write('dummy');
     const readyPromise = writer.ready.catch(() => events.push('ready'));

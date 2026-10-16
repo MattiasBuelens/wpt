@@ -78,9 +78,13 @@ promise_test(async t => {
 
 promise_test(async t => {
   let controller;
+  let resolveStart;
   const ts = new TransformStream({
     start(c) {
       controller = c;
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
     },
     async cancel(reason) {
       assert_equals(reason, originalReason, 'transformer.cancel() should be called with the passed reason');
@@ -90,11 +94,12 @@ promise_test(async t => {
   });
   const cancelPromise = ts.readable.cancel(originalReason);
   const closePromise = ts.writable.close();
-  await Promise.all([
-    promise_rejects_exactly(t, thrownError, cancelPromise, 'cancelPromise should reject with thrownError'),
-    promise_rejects_exactly(t, thrownError, closePromise, 'closePromise should reject with thrownError'),
-  ]);
-}, 'readable.cancel() and a parallel writable.close() should reject if a transformer.cancel() calls controller.error()');
+  // The writable has not started yet, so it is still erroring (not errored) when transformer.cancel() settles.
+  await cancelPromise;
+  resolveStart();
+  await promise_rejects_exactly(t, thrownError, closePromise, 'closePromise should reject with thrownError');
+}, 'readable.cancel() before start should fulfill and a parallel writable.close() should reject if a ' +
+   'transformer.cancel() calls controller.error()');
 
 promise_test(async t => {
   let controller;

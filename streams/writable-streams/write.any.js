@@ -77,7 +77,7 @@ promise_test(() => {
 
   assert_equals(writer.desiredSize, 1, 'desiredSize should be 1');
 
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     let writePromiseResolved = false;
     assert_not_equals(resolveSinkWritePromise, undefined, 'resolveSinkWritePromise should not be undefined');
@@ -120,7 +120,7 @@ promise_test(t => {
 
   assert_equals(writer.desiredSize, 1, 'desiredSize should be 1');
 
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     assert_equals(sinkWritePromiseRejectors.length, 1, 'there should be 1 rejector');
     assert_equals(writer.desiredSize, 0, 'desiredSize should be 0');
@@ -209,7 +209,7 @@ promise_test(() => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     for (let i = 1; i < numberOfWrites; ++i) {
       writer.write('a');
     }
@@ -231,7 +231,7 @@ promise_test(() => {
   const WritableStreamDefaultWriter = w.constructor;
   w.releaseLock();
   const writer = new WritableStreamDefaultWriter(stream);
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     writer.write('a');
     assert_array_equals(stream.events, ['write', 'a'], 'write() should be passed to sink');
   });

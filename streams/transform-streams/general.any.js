@@ -378,14 +378,19 @@ test(() => {
 
 promise_test(t => {
   let controller;
+  let resolveStart;
   const ts = new TransformStream({
     start(c) {
       controller = c;
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
     }
   });
   const cancelReason = { name: 'cancelReason' };
   const cancelPromise = ts.readable.cancel(cancelReason);
   controller.terminate();
+  resolveStart();
   return Promise.all([
     cancelPromise,
     promise_rejects_js(t, TypeError, ts.writable.getWriter().closed, 'closed should reject with TypeError')

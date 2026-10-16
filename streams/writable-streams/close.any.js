@@ -127,7 +127,7 @@ promise_test(() => {
 
   const writer = ws.getWriter();
 
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     assert_equals(writer.desiredSize, 1, 'desiredSize should be 1');
 
     writer.close();
@@ -180,7 +180,7 @@ promise_test(() => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     writer.write('a');
 
     writer.close();
@@ -379,7 +379,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('c');
     controller.error(error1);
     const closePromise = writer.close();

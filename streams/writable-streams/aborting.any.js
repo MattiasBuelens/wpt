@@ -361,7 +361,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     writer.abort(error1);
     let closedRejected = false;
@@ -381,7 +381,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     const abortPromise = writer.abort(error2);
     let closedRejected = false;
@@ -404,7 +404,7 @@ promise_test(t => {
     }
   }, new CountQueuingStrategy({ highWaterMark: 4 }));
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const settlementOrder = [];
     return Promise.all([
       writer.write('1').then(() => settlementOrder.push(1)),
@@ -424,7 +424,7 @@ promise_test(t => {
     }
   }, new CountQueuingStrategy({ highWaterMark: 4 }));
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const settlementOrder = [];
     return Promise.all([
       promise_rejects_exactly(t, error1, writer.write('1'), 'in-flight write should be rejected')
@@ -445,7 +445,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     return Promise.all([
       promise_rejects_exactly(t, error1, writer.write('a'), 'writer.write() should reject with error from underlying write()'),
       promise_rejects_exactly(t, error2, writer.close(),
@@ -466,7 +466,7 @@ promise_test(() => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     writer.write('a');
     const abortPromise = writer.abort('b');
     return flushAsyncEvents().then(() => {
@@ -490,7 +490,7 @@ promise_test(() => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     writer.close();
     const abortPromise = writer.abort();
     return flushAsyncEvents().then(() => {
@@ -518,7 +518,7 @@ promise_test(t => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const closePromise = writer.close();
     const abortPromise = writer.abort();
     return flushAsyncEvents().then(() => {
@@ -545,7 +545,7 @@ promise_test(t => {
   });
 
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     writer.write('a');
     const closePromise = writer.close();
     const abortPromise = writer.abort(error1);
@@ -582,7 +582,7 @@ promise_test(t => {
 promise_test(() => {
   const ws = new WritableStream();
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const closePromise = writer.close();
     const abortPromise = writer.abort();
     const events = [];
@@ -1059,7 +1059,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     const closed = writer.closed;
     const abortPromise = writer.abort();
@@ -1094,7 +1094,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     const closed = writer.closed;
     const abortPromise = writer.abort();
@@ -1207,7 +1207,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('a');
     const abortPromise = writer.abort();
     controller.error(error1);
@@ -1233,7 +1233,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const closePromise = writer.close();
     const abortPromise = writer.abort();
     controller.error(error1);
@@ -1255,7 +1255,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('1');
     const abortPromise = writer.abort(error2);
     rejectWrite(error1);
@@ -1353,7 +1353,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise = writer.write('chunk');
     controller.error(error1);
     const abortPromise = writer.abort(error2);
@@ -1383,7 +1383,7 @@ promise_test(t => {
     highWaterMark: 1
   });
   const writer = ws.getWriter();
-  return writer.ready.then(() => {
+  return flushAsyncEvents().then(() => {
     const writePromise1 = writer.write('chunk1');
     size = NaN;
     const writePromise2 = writer.write('chunk2');

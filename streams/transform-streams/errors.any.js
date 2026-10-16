@@ -198,12 +198,19 @@ promise_test(t => {
 }, 'an exception from transform() should error the stream if terminate has been requested but not completed');
 
 promise_test(t => {
-  const ts = new TransformStream();
+  let resolveStart;
+  const ts = new TransformStream({
+    start() {
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
+    }
+  });
   const writer = ts.writable.getWriter();
-  // The microtask following transformer.start() hasn't completed yet, so the abort is queued and not notified to the
-  // TransformStream yet.
+  // transformer.start() hasn't completed yet, so the abort is queued and not notified to the TransformStream yet.
   const abortPromise = writer.abort(thrownError);
   const cancelPromise = ts.readable.cancel(new Error('cancel reason'));
+  resolveStart();
   return Promise.all([
     abortPromise,
     cancelPromise,
@@ -301,13 +308,18 @@ promise_test(t => {
 
 promise_test(t => {
   let controller;
+  let resolveStart;
   const ts = new TransformStream({
     start(c) {
       controller = c;
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
     }
   });
   const cancelPromise = ts.readable.cancel(ignoredError);
   controller.error(thrownError);
+  resolveStart();
   return Promise.all([
     cancelPromise,
     promise_rejects_exactly(t, thrownError, ts.writable.getWriter().closed, 'closed should reject with thrownError')
