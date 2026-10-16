@@ -598,6 +598,28 @@ promise_test(t => {
 
 }, 'Errors must be propagated backward: becomes errored before piping via abort; preventCancel = true');
 
+promise_test(async () => {
+
+  const rs = recordingReadableStream();
+
+  const ws = recordingWritableStream();
+  await flushAsyncEvents(); // ensure stream is started
+
+  ws.abort(error1);
+
+  await rs.pipeTo(ws).then(
+    () => assert_unreached('the promise must not fulfill'),
+    err => {
+      assert_equals(err, error1, 'the promise must reject with error1');
+
+      assert_array_equals(rs.eventsWithoutPulls, ['cancel', err]);
+      assert_array_equals(ws.events, ['abort', error1]);
+    }
+  );
+  await flushAsyncEvents();
+
+}, 'Errors must be propagated backward: becomes errored before piping via abort, after starting');
+
 promise_test(t => {
 
   const rs = recordingReadableStream();
