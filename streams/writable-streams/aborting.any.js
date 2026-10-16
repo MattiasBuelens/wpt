@@ -1565,3 +1565,36 @@ promise_test(async t => {
     writer.closed
   ]);
 }, 'recursive close() call from abort() aborting signal');
+
+promise_test(async t => {
+  const ws = new WritableStream();
+
+  const writer1 = ws.getWriter();
+  const abortPromise = writer1.abort(error1);
+  writer1.releaseLock();
+
+  const writer2 = ws.getWriter();
+  await Promise.all([
+    abortPromise,
+    promise_rejects_js(t, TypeError, writer1.closed, 'writer1.closed should reject with a TypeError'),
+    promise_rejects_exactly(t, error1, writer2.closed, 'writer2.closed should reject with error1')
+  ]);
+  await flushAsyncEvents();
+}, 'getWriter() after releaseLock() while aborting should give a writer whose closed promise rejects (not started)');
+
+promise_test(async t => {
+  const ws = new WritableStream();
+  await flushAsyncEvents(); // ensure stream is started
+
+  const writer1 = ws.getWriter();
+  const abortPromise = writer1.abort(error1);
+  writer1.releaseLock();
+
+  const writer2 = ws.getWriter();
+  await Promise.all([
+    abortPromise,
+    promise_rejects_js(t, TypeError, writer1.closed, 'writer1.closed should reject with a TypeError'),
+    promise_rejects_exactly(t, error1, writer2.closed, 'writer2.closed should reject with error1')
+  ]);
+  await flushAsyncEvents();
+}, 'getWriter() after releaseLock() while aborting should give a writer whose closed promise rejects');
