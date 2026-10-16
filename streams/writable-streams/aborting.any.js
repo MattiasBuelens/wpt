@@ -151,6 +151,28 @@ promise_test(t => {
       throw error1;
     }
   });
+  const writer = ws.getWriter();
+
+  return flushAsyncEvents().then(() => {
+    const abortPromise1 = writer.abort(undefined);
+    const abortPromise2 = writer.abort(undefined);
+
+    assert_not_equals(abortPromise1, abortPromise2, 'the stream is already errored, so the promises must be different');
+
+    return Promise.all([
+      promise_rejects_exactly(t, error1, abortPromise1, 'first abort() must reject with the error thrown by abort'),
+      abortPromise2.then(v => assert_equals(v, undefined, 'second abort() should fulfill with undefined'))
+    ]);
+  });
+}, 'WritableStream if sink\'s abort throws, the promise returned by the first writer.abort() after start rejects and the ' +
+   'second fulfills');
+
+promise_test(t => {
+  const ws = new WritableStream({
+    abort() {
+      throw error1;
+    }
+  });
 
   return promise_rejects_exactly(t, error1, ws.abort(undefined),
     'rejection reason of abortPromise must be the error thrown by abort');
@@ -227,6 +249,24 @@ promise_test(t => {
 
   return writePromise;
 }, 'Aborting a WritableStream causes any outstanding write() promises to be rejected with the reason supplied');
+
+promise_test(t => {
+  const ws = recordingWritableStream();
+  const writer = ws.getWriter();
+
+  return flushAsyncEvents().then(() => {
+    const writePromise = writer.write('a');
+    const abortPromise = writer.abort(error1);
+
+    return Promise.all([
+      writePromise,
+      abortPromise,
+      promise_rejects_exactly(t, error1, writer.closed, 'closed should reject with error1')
+    ]);
+  }).then(() => {
+    assert_array_equals(ws.events, ['write', 'a', 'abort', error1], 'the write should reach the sink before abort');
+  });
+}, 'Aborting a WritableStream after start does not reject a write() that is already in flight');
 
 promise_test(t => {
   const ws = recordingWritableStream();
@@ -1250,6 +1290,22 @@ promise_test(() => {
   return abortPromise1.then(
       v => assert_equals(v, undefined, 'abort() should fulfill with undefined'));
 }, 'when calling abort() twice on the same stream, both should give the same promise that fulfills with undefined');
+
+promise_test(() => {
+  const ws = recordingWritableStream();
+
+  return flushAsyncEvents().then(() => {
+    const abortPromise1 = ws.abort(error1);
+    const abortPromise2 = ws.abort(error1);
+    assert_not_equals(abortPromise1, abortPromise2, 'the stream is already errored, so the promises must be different');
+
+    return Promise.all([abortPromise1, abortPromise2]);
+  }).then(([v1, v2]) => {
+    assert_equals(v1, undefined, 'first abort() should fulfill with undefined');
+    assert_equals(v2, undefined, 'second abort() should fulfill with undefined');
+    assert_array_equals(ws.events, ['abort', error1], 'sink abort() should be called only once');
+  });
+}, 'when calling abort() twice on the same stream after start, both should fulfill with undefined');
 
 promise_test(() => {
   const ws = new WritableStream();

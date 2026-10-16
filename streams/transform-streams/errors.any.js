@@ -237,6 +237,37 @@ promise_test(t => {
 }, 'abort should set the close reason for the writable when it happens before cancel during underlying sink write, ' +
              'but cancel should still succeed');
 
+promise_test(t => {
+  let resolveTransform;
+  const transformPromise = new Promise(resolve => {
+    resolveTransform = resolve;
+  });
+  let resolveStart;
+  const ts = new TransformStream({
+    start() {
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
+    },
+    transform() {
+      return transformPromise;
+    }
+  }, undefined, { highWaterMark: 2 });
+  const writer = ts.writable.getWriter();
+  // The stream has not started yet, so the write is still queued when abort() is called.
+  const writePromise = writer.write();
+  const abortPromise = writer.abort(thrownError);
+  const cancelPromise = ts.readable.cancel(new Error('cancel reason'));
+  resolveStart();
+  resolveTransform();
+  return Promise.all([
+    promise_rejects_exactly(t, thrownError, writePromise, 'write() should reject with thrownError'),
+    abortPromise,
+    cancelPromise,
+    promise_rejects_exactly(t, thrownError, writer.closed, 'writer.closed should reject with thrownError')]);
+}, 'abort should set the close reason for the writable when it happens before cancel during start with a queued write, ' +
+             'and the write should be rejected');
+
 const ignoredError = new Error('ignoredError');
 ignoredError.name = 'ignoredError';
 
@@ -257,6 +288,24 @@ promise_test(t => {
       controller = c;
     }
   });
+  return flushAsyncEvents().then(() => {
+    controller.error(thrownError);
+    controller.error(ignoredError);
+    return Promise.all([
+      ts.writable.abort(),
+      promise_rejects_exactly(t, thrownError, ts.writable.getWriter().closed, 'closed should reject with thrownError'),
+      promise_rejects_exactly(t, thrownError, ts.readable.getReader().closed, 'closed should reject with thrownError')
+    ]);
+  });
+}, 'controller.error() should do nothing the second time it is called after start');
+
+promise_test(t => {
+  let controller;
+  const ts = new TransformStream({
+    start(c) {
+      controller = c;
+    }
+  });
   const cancelPromise = ts.readable.cancel(ignoredError);
   controller.error(thrownError);
   return Promise.all([
@@ -264,6 +313,23 @@ promise_test(t => {
     promise_rejects_exactly(t, thrownError, ts.writable.getWriter().closed, 'closed should reject with thrownError')
   ]);
 }, 'controller.error() should close writable immediately after readable.cancel()');
+
+promise_test(t => {
+  let controller;
+  const ts = new TransformStream({
+    start(c) {
+      controller = c;
+    }
+  });
+  return flushAsyncEvents().then(() => {
+    const cancelPromise = ts.readable.cancel(ignoredError);
+    controller.error(thrownError);
+    return Promise.all([
+      promise_rejects_exactly(t, thrownError, cancelPromise, 'cancel() should reject with thrownError'),
+      promise_rejects_exactly(t, thrownError, ts.writable.getWriter().closed, 'closed should reject with thrownError')
+    ]);
+  });
+}, 'controller.error() should error writable immediately after readable.cancel() after start, and cancel should reject');
 
 promise_test(t => {
   let controller;

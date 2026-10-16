@@ -399,6 +399,24 @@ promise_test(t => {
       controller = c;
     }
   });
+  return flushAsyncEvents().then(() => {
+    const cancelReason = { name: 'cancelReason' };
+    const cancelPromise = ts.readable.cancel(cancelReason);
+    controller.terminate();
+    return Promise.all([
+      promise_rejects_js(t, TypeError, cancelPromise, 'cancel() should reject with TypeError'),
+      promise_rejects_js(t, TypeError, ts.writable.getWriter().closed, 'closed should reject with TypeError')
+    ]);
+  });
+}, 'terminate() should error writable immediately after readable.cancel() after start, and cancel should reject');
+
+promise_test(t => {
+  let controller;
+  const ts = new TransformStream({
+    start(c) {
+      controller = c;
+    }
+  });
   const cancelReason = { name: 'cancelReason' };
   return ts.readable.cancel(cancelReason).then(() => {
     controller.terminate();

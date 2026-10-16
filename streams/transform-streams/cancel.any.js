@@ -108,6 +108,28 @@ promise_test(async t => {
     },
     flush: t.unreached_func('flush should not be called')
   });
+  await flushAsyncEvents(); // ensure stream is started
+  const cancelPromise = ts.readable.cancel(originalReason);
+  const closePromise = ts.writable.close();
+  await Promise.all([
+    promise_rejects_exactly(t, thrownError, cancelPromise, 'cancelPromise should reject with thrownError'),
+    promise_rejects_js(t, TypeError, closePromise, 'closePromise should reject with a TypeError'),
+  ]);
+}, 'readable.cancel() and a parallel writable.close() after start should reject if a transformer.cancel() calls ' +
+   'controller.error()');
+
+promise_test(async t => {
+  let controller;
+  const ts = new TransformStream({
+    start(c) {
+      controller = c;
+    },
+    async cancel(reason) {
+      assert_equals(reason, originalReason, 'transformer.cancel() should be called with the passed reason');
+      controller.error(thrownError);
+    },
+    flush: t.unreached_func('flush should not be called')
+  });
   const cancelPromise = ts.writable.abort(originalReason);
   await promise_rejects_exactly(t, thrownError, cancelPromise, 'cancelPromise should reject with thrownError');
   const closePromise = ts.readable.cancel(1);
@@ -182,6 +204,29 @@ promise_test(async t => {
 
 promise_test(async t => {
   const cancelReason = new Error('cancel reason');
+  let resolveStart;
+  let closePromise;
+  let cancelCalled = false;
+  const ts = new TransformStream({
+    start() {
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
+    },
+    cancel() {
+      cancelCalled = true;
+      closePromise = ts.writable.close();
+    },
+    flush: t.unreached_func('flush should not be called')
+  });
+  await ts.readable.cancel(cancelReason);
+  assert_true(cancelCalled, 'cancel() was called');
+  resolveStart();
+  await promise_rejects_exactly(t, cancelReason, closePromise, 'close() should reject with cancelReason');
+}, 'writable.close() before start should not call flush() when cancel() is already called from readable.cancel()');
+
+promise_test(async t => {
+  const cancelReason = new Error('cancel reason');
   const abortReason = new Error('abort reason');
   let cancelCalls = 0;
   let controller;
@@ -203,3 +248,29 @@ promise_test(async t => {
   await promise_rejects_exactly(t, abortReason, abortPromise);
   assert_equals(cancelCalls, 1);
 }, 'writable.abort() should not call cancel() again when already called from readable.cancel()');
+
+promise_test(async t => {
+  const cancelReason = new Error('cancel reason');
+  const abortReason = new Error('abort reason');
+  let cancelCalls = 0;
+  let resolveStart;
+  let abortPromise;
+  const ts = new TransformStream({
+    start() {
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
+    },
+    cancel() {
+      if (++cancelCalls === 1) {
+        abortPromise = ts.writable.abort(abortReason);
+      }
+    },
+    flush: t.unreached_func('flush should not be called')
+  });
+  await ts.readable.cancel(cancelReason);
+  assert_equals(cancelCalls, 1);
+  resolveStart();
+  await abortPromise;
+  assert_equals(cancelCalls, 1);
+}, 'writable.abort() before start should not call cancel() again when already called from readable.cancel()');

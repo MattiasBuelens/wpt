@@ -145,6 +145,33 @@ promise_test(t => {
   });
   const ws = recordingWritableStream();
   const writer = ws.getWriter();
+
+  return flushAsyncEvents().then(() => {
+    const closePromise = writer.close();
+    writer.releaseLock();
+
+    return promise_rejects_exactly(t, error1, rs.pipeTo(ws), 'pipeTo must reject with the readable stream\'s error').then(() => {
+      assert_array_equals(rs.events, []);
+      assert_array_equals(ws.events, ['close'], 'the in-flight close should complete and abort should not be called');
+
+      return Promise.all([
+        promise_rejects_exactly(t, error1, rs.getReader().closed, 'the readable stream must be errored with error1'),
+        ws.getWriter().closed,
+        closePromise
+      ]);
+    });
+  });
+
+}, 'Piping from an errored readable stream to a writable stream that is closing after start');
+
+promise_test(t => {
+  const rs = recordingReadableStream({
+    start(c) {
+      c.error(error1);
+    }
+  });
+  const ws = recordingWritableStream();
+  const writer = ws.getWriter();
   const closePromise = writer.close();
   writer.releaseLock();
 

@@ -160,6 +160,23 @@ promise_test(() => {
 }, 'cancelling the readable should cause a pending write to resolve');
 
 promise_test(t => {
+  let resolveStart;
+  const ts = new TransformStream({
+    start() {
+      return new Promise(resolve => {
+        resolveStart = resolve;
+      });
+    }
+  }, undefined, { highWaterMark: 1 });
+  const writer = ts.writable.getWriter();
+  // The stream has not started yet, so the write is still queued when the readable is cancelled.
+  const writePromise = writer.write('a');
+  ts.readable.cancel(error1);
+  resolveStart();
+  return promise_rejects_exactly(t, error1, writePromise, 'write() should reject with error1');
+}, 'cancelling the readable before start should cause a pending write to reject');
+
+promise_test(t => {
   const rs = new ReadableStream();
   const ts = new TransformStream();
   const pipePromise = rs.pipeTo(ts.writable);
